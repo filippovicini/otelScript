@@ -3,14 +3,14 @@ $ErrorActionPreference = "Stop"
 # Create output directory
 New-Item -ItemType Directory -Force -Path "C:\Monitoring_2\otel-traces"
 
-# Download and extract OpenTelemetry Collector
-Invoke-WebRequest -Uri "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.86.0/otelcol-contrib-0.86.0-windows_amd64.zip" -OutFile "$env:TEMP\otelcol-contrib-0.86.0-windows_amd64.zip"
+# Download the OpenTelemetry Collector archive
+Invoke-WebRequest -Uri "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.128.0/otelcol-contrib_0.128.0_windows_amd64.tar.gz" -OutFile "$env:TEMP\otelcol-contrib_0.128.0_windows_amd64.tar.gz"
 
 # Create install directory
 New-Item -ItemType Directory -Force -Path "C:\Program Files\OpenTelemetry Collector"
 
 # Extract the collector
-Expand-Archive -Path "$env:TEMP\otelcol-contrib-0.86.0-windows_amd64.zip" -DestinationPath "C:\Program Files\OpenTelemetry Collector" -Force
+tar -xzf "$env:TEMP\otelcol-contrib_0.128.0_windows_amd64.tar.gz" -C "C:\Program Files\OpenTelemetry Collector"
 
 # Copy config file (assumes config is already present in the same directory as the script)
 Copy-Item -Path "config\otel-collector-config.yaml" -Destination "C:\Program Files\OpenTelemetry Collector\config.yaml" -Force
