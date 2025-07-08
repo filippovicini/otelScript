@@ -1,49 +1,34 @@
-param(
-    [string]$CollectorVersion = "0.86.0",
-    [string]$OutputPath = "C:\Monitoring_2\otel-traces"
-)
-
-$ErrorActionPreference = "Stop"
-
-# Create output directory if it doesn't exist
-New-Item -ItemType Directory -Force -Path $OutputPath
-
-# Download and extract OpenTelemetry Collector
-$collectorZip = "otelcol-contrib-$CollectorVersion-windows_amd64.zip"
-$downloadUrl = "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v$CollectorVersion/$collectorZip"
-$outputZip = Join-Path $env:TEMP $collectorZip
-
-# Download the collector
-Invoke-WebRequest -Uri $downloadUrl -OutFile $outputZip
-
-# Extract to Program Files
-$installPath = "${env:ProgramFiles}\OpenTelemetry Collector"
-New-Item -ItemType Directory -Force -Path $installPath
-Expand-Archive -Path $outputZip -DestinationPath $installPath -Force
-
-# Copy config file from artifacts
-$configSource = "config\otel-collector-config.yaml"
-$configDest = Join-Path $installPath "config.yaml"
-Copy-Item -Path $configSource -Destination $configDest -Force
-
-# Create and start Windows service
-$serviceName = "otelcol"
-$binaryPath = """${installPath}\otelcol-contrib.exe"" --config ""${configDest}"""
-
-# Remove existing service if it exists
-if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
-    Stop-Service -Name $serviceName -Force
-    $proc = Get-WmiObject -Class Win32_Service -Filter "name='$serviceName'"
-    $proc.delete()
-}
-
-# Create and start the service
-New-Service -Name $serviceName `
-    -DisplayName "OpenTelemetry Collector" `
-    -Description "OpenTelemetry Collector for trace/metric/log collection" `
-    -BinaryPathName $binaryPath `
-    -StartupType Automatic
-
-Start-Service -Name $serviceName
-
-Write-Host "OpenTelemetry Collector installed and started successfully"
+$ErrorActionPreference = "Stop"
+
+# Create output directory
+New-Item -ItemType Directory -Force -Path "C:\Monitoring_2\otel-traces"
+
+# Download and extract OpenTelemetry Collector
+Invoke-WebRequest -Uri "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.86.0/otelcol-contrib-0.86.0-windows_amd64.zip" -OutFile "$env:TEMP\otelcol-contrib-0.86.0-windows_amd64.zip"
+
+# Create install directory
+New-Item -ItemType Directory -Force -Path "C:\Program Files\OpenTelemetry Collector"
+
+# Extract the collector
+Expand-Archive -Path "$env:TEMP\otelcol-contrib-0.86.0-windows_amd64.zip" -DestinationPath "C:\Program Files\OpenTelemetry Collector" -Force
+
+# Copy config file (assumes config is already present in the same directory as the script)
+Copy-Item -Path "config\otel-collector-config.yaml" -Destination "C:\Program Files\OpenTelemetry Collector\config.yaml" -Force
+
+# Remove existing service if it exists
+if (Get-Service -Name "otelcol" -ErrorAction SilentlyContinue) {
+    Stop-Service -Name "otelcol" -Force
+    $svc = Get-WmiObject -Class Win32_Service -Filter "name='otelcol'"
+    $svc.delete()
+}
+
+# Create and start the service
+New-Service -Name "otelcol" `
+    -DisplayName "OpenTelemetry Collector" `
+    -Description "OpenTelemetry Collector for trace/metric/log collection" `
+    -BinaryPathName "`"C:\Program Files\OpenTelemetry Collector\otelcol-contrib.exe`" --config `"C:\Program Files\OpenTelemetry Collector\config.yaml`"" `
+    -StartupType Automatic
+
+Start-Service -Name "otelcol"
+
+Write-Host "OpenTelemetry Collector installed and started successfully"
