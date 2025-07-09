@@ -13,7 +13,8 @@ New-Item -ItemType Directory -Force -Path "C:\Program Files\OpenTelemetry Collec
 tar -xzf "$env:TEMP\otelcol-contrib_0.128.0_windows_amd64.tar.gz" -C "C:\Program Files\OpenTelemetry Collector"
 
 # Copy config file (assumes config is already present in the same directory as the script)
-Copy-Item -Path "config\otel-collector-config.yaml" -Destination "C:\Program Files\OpenTelemetry Collector\config.yaml" -Force
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/filippovicini/otelScript/refs/heads/main/otel-collector-config.yaml" `
+  -OutFile "C:\Program Files\OpenTelemetry Collector\config.yaml" -UseBasicParsing
 
 # Remove existing service if it exists
 if (Get-Service -Name "otelcol" -ErrorAction SilentlyContinue) {
